@@ -1,0 +1,36 @@
+import pytest
+from fastapi.testclient import TestClient
+import sys
+from pathlib import Path
+
+# Add src directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from app import app, activities
+
+
+@pytest.fixture
+def client():
+    """Create a test client for the FastAPI app"""
+    return TestClient(app)
+
+
+@pytest.fixture
+def reset_activities():
+    """Reset activities to known state before each test"""
+    # Store original state
+    original_activities = {
+        name: {
+            "description": activity["description"],
+            "schedule": activity["schedule"],
+            "max_participants": activity["max_participants"],
+            "participants": activity["participants"].copy()
+        }
+        for name, activity in activities.items()
+    }
+    
+    yield
+    
+    # Restore original state after test
+    for name, activity in activities.items():
+        activity["participants"] = original_activities[name]["participants"].copy()
